@@ -23,18 +23,19 @@ import com.google.mediapipe.framework.PacketGetter
 import com.google.mediapipe.glutil.EglManager
 
 
-
 class MainActivity : AppCompatActivity() {
 
     private val TAG = "MainActivity"
 
     private val INPUT_NUM_FACES_SIDE_PACKET_NAME = "num_faces"
     private val OUTPUT_LANDMARKS_STREAM_NAME = "multi_face_landmarks"
-    private val BINARY_GRAPH_NAME = "face_detection_mobile_gpu.binarypb"
+
+    // GPU MODE
+    private val BINARY_GRAPH_GPU_NAME = "face_mesh_mobile_gpu.binarypb"
+
     private val INPUT_VIDEO_STREAM_NAME = "input_video"
     private val OUTPUT_VIDEO_STREAM_NAME = "output_video"
     private val NUM_BUFFERS = 2
-
 
     // Max number of faces to detect/process.
     private val NUM_FACES = 1
@@ -95,7 +96,7 @@ class MainActivity : AppCompatActivity() {
         processor = FrameProcessor(
             this,
             eglManager!!.nativeContext,
-            BINARY_GRAPH_NAME,
+            BINARY_GRAPH_GPU_NAME,
             INPUT_VIDEO_STREAM_NAME,
             OUTPUT_VIDEO_STREAM_NAME
         )
@@ -108,13 +109,11 @@ class MainActivity : AppCompatActivity() {
         PermissionHelper.checkAndRequestCameraPermissions(this)
 
 
-
         // This is all for logging
         val packetCreator = processor!!.packetCreator // null error
         val inputSidePackets: MutableMap<String, Packet> = HashMap()
         inputSidePackets[INPUT_NUM_FACES_SIDE_PACKET_NAME] = packetCreator.createInt32(NUM_FACES)
         processor!!.setInputSidePackets(inputSidePackets)
-
 
 
         // To show verbose logging, run:
@@ -141,7 +140,6 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
-
 
 
     override fun onResume() {
@@ -176,7 +174,6 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         PermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
-
 
 
     private fun onCameraStarted(surfaceTexture: SurfaceTexture) {
@@ -262,7 +259,8 @@ class MainActivity : AppCompatActivity() {
         if (multiFaceLandmarks.isEmpty()) {
             return "No face landmarks"
         }
-        var multiFaceLandmarksStr = "Number of faces detected: ${multiFaceLandmarks.size} ".trimIndent()
+        var multiFaceLandmarksStr =
+            "Number of faces detected: ${multiFaceLandmarks.size} ".trimIndent()
         for ((faceIndex, landmarks) in multiFaceLandmarks.withIndex()) {
             multiFaceLandmarksStr += "#Face landmarks for face[$faceIndex]: ${landmarks.landmarkCount}"
             for ((landmarkIndex, landmark) in landmarks.landmarkList.withIndex()) {
